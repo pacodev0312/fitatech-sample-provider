@@ -1,0 +1,128 @@
+stages:
+  - build
+  - analyze
+  - pack
+  - publish
+
+default:
+  image: mcr.microsoft.com/dotnet/sdk:8.0.203
+  tags:
+    - dotnet
+
+variables:
+  DOCKER_BUILDER_INSTANCE: fintatech
+  DOCKER_PLATFORMS: linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/arm64
+  CONFIGURATION: Release
+  NUGET_SOURCE_NAME: gitlab
+  COVERAGE_DIR: ./coverage
+  ASPNET_PROVIDER_PROJECT_PATH: ./src/Api/Provider.AspNetCore
+  ASPNET_PROVIDER_DOCKER_IMAGE: $CI_REGISTRY_IMAGE/provider
+
+# Common templates
+
+.if-beta: &if-beta
+            '$CI_COMMIT_TAG =~ /^beta\//'
+
+.if-release: &if-release
+               '$CI_COMMIT_TAG =~ /^release\//'
+
+# Build
+
+.dotnet:
+  before_script:
+    - dotnet --version
+    - dotnet nuget add source "$NUGET_SOURCE_URI"
+      --name $NUGET_SOURCE_NAME
+      --username $NUGET_USERNAME
+      --password "$NUGET_PASSWORD"
+      --store-password-in-clear-text
+    - dotnet tool restore
+  after_script:
+    - dotnet nuget remove source $NUGET_SOURCE_NAME
+
+build:
+  extends: .dotnet
+  stage: build
+  script:
+    - dotnet build --configuration $CONFIGURATION
+  artifacts:
+    paths:
+      - bin/$CONFIGURATION/**
+    expire_in: 1 day
+
+# Analyze
+
+analyze:
+  extends: .dotnet
+  stage: analyze
+  script:
+    - dotnet format --verify-no-changes --severity info
+  needs:
+    - job: build
+
+# Pack
+
+pack api:
+  extends: .dotnet
+  stage: pack
+  script:
+    - dotnet publish --configuration $CONFIGURATION
+  artifacts:
+    paths:
+      - bin/$CONFIGURATION/**/publish/**
+    expire_in: 1 day
+  needs:
+    - job: build
+  rules:
+    - if: *if-beta
+    - if: *if-release
+
+# Publish
+
+.docker:
+  image: docker
+  services:
+    - docker:dind
+  before_script:
+    - docker --version
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker buildx create --name $DOCKER_BUILDER_INSTANCE --driver docker-container --use
+  after_script:
+    - docker logout $CI_REGISTRY
+    - docker buildx rm $DOCKER_BUILDER_INSTANCE
+  tags:
+    - docker
+
+.docker-build:
+  extends: .docker
+  stage: publish
+  script:
+    - EXTRA_TAG=${CI_COMMIT_TAG#*\/}$EXTRA_TAG_SUFFIX
+    - docker buildx build
+      --file $DOCKER_FILE
+      --platform $DOCKER_PLATFORMS
+      --pull
+      --push
+      --provenance false
+      --tag $DOCKER_IMAGE:$TAG
+      --tag $DOCKER_IMAGE:$EXTRA_TAG
+      .
+  cache: [ ]
+  rules:
+    - if: *if-beta
+      variables:
+        TAG: latest
+        EXTRA_TAG_SUFFIX: -beta
+    - if: *if-release
+      variables:
+        TAG: stable
+
+publish api:
+  extends: .docker-build
+  variables:
+    DOCKER_FILE: $ASPNET_PROVIDER_PROJECT_PATH/Dockerfile
+    DOCKER_IMAGE: $ASPNET_PROVIDER_DOCKER_IMAGE
+  needs:
+    - job: analyze
+      artifacts: false
+    - job: pack api

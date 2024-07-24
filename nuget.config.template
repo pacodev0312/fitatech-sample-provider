@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <packageSources>
+        <add key="fintatech" value="%NUGET_URI%" />
+    </packageSources>
+    <packageSourceCredentials>
+        <fintatech>
+            <add key="Username" value="%NUGET_USERNAME%" />
+            <add key="ClearTextPassword" value="%NUGET_PASSWORD%" />
+        </fintatech>
+    </packageSourceCredentials>
+</configuration>

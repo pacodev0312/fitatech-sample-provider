@@ -1,0 +1,78 @@
+<Project>
+    <PropertyGroup>
+        <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+        <IsDemoProject>$(MSBuildProjectName.EndsWith('.Demo').ToString().ToLowerInvariant())</IsDemoProject>
+        <IsTestProject>$(MSBuildProjectName.EndsWith('.Tests').ToString().ToLowerInvariant())</IsTestProject>
+    </PropertyGroup>
+
+    <!-- Path configuration -->
+    <PropertyGroup Condition="'$(MSBuildProjectName)' != 'Postgresql'">
+        <!-- At the moment dotnet ef commands do not work with custom intermediate path -->
+        <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(Configuration)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+        <IntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(Configuration)\$(MSBuildProjectName)\</IntermediateOutputPath>
+        <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory)obj\$(Configuration)\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>
+    </PropertyGroup>
+    <PropertyGroup>
+        <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Prefer32bit>false</Prefer32bit>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>12</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <AnalysisMode>Recommended</AnalysisMode>
+        <AnalysisModeDesign>Recommended</AnalysisModeDesign>
+        <AnalysisModeDocumentation>All</AnalysisModeDocumentation>
+        <AnalysisModeGlobalization>All</AnalysisModeGlobalization>
+        <AnalysisModeMaintainability>All</AnalysisModeMaintainability>
+        <AnalysisModeNaming>All</AnalysisModeNaming>
+        <AnalysisModePerformance>Recommended</AnalysisModePerformance>
+        <AnalysisModeReliability>Recommended</AnalysisModeReliability>
+        <AnalysisModeSecurity>All</AnalysisModeSecurity>
+        <AnalysisModeStyle>Recommended</AnalysisModeStyle>
+        <AnalysisModeUsage>All</AnalysisModeUsage>
+
+        <AnalysisLevel>latest</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Company>Fintatech B.V.</Company>
+        <Authors>Fintatech B.V.</Authors>
+        <Owners>Fintatech B.V.</Owners>
+        <Product>Fintatech Platform</Product>
+        <Copyright>© Fintatech B.V. All rights reserved.</Copyright>
+        <VersionPrefix>0.1.0</VersionPrefix>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <RunWithWarnings>true</RunWithWarnings>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+        <WarningsAsErrors/>
+    </PropertyGroup>
+
+    <Choose>
+        <When Condition="'$(IsTestProject)' == 'true' OR '$(IsDemoProject)' == 'true'">
+            <PropertyGroup>
+                <NoWarn>CS1591</NoWarn> <!-- Missing XML comment -->
+            </PropertyGroup>
+        </When>
+    </Choose>
+
+    <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+        <UseSourceLink>true</UseSourceLink>
+        <CoverletOutputFormat>opencover</CoverletOutputFormat>
+        <Exclude>[xunit.*]*,[*.Demo]*,[*.Testing]*</Exclude>
+        <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+        <CoverletOutput>$(MSBuildThisFileDirectory)coverage/$(MSBuildProjectName).xml</CoverletOutput>
+        <CollectCoverage>true</CollectCoverage>
+    </PropertyGroup>
+</Project>

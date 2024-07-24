@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+
+    <AssemblyName>Fintatech.DataProviders.Sample.Core.Provider</AssemblyName>
+    <RootNamespace>Fintatech.DataProviders.Sample.Core.Provider</RootNamespace>
+
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fintatech.Common.Financial" Version="0.10.4" />
+    <PackageReference Include="Fintatech.DataConsolidators.Bars.Core.Common" Version="0.8.6" />
+    <PackageReference Include="Fintatech.DataConsolidators.Instruments.Core.Common" Version="0.10.8" />
+    <PackageReference Include="Fintatech.DataConsolidators.Realtime.Core.Common" Version="0.7.5" />
+    <PackageReference Include="Fintatech.DataConsolidators.Subscriptions.Core.Common" Version="0.8.4" />
+  </ItemGroup>
+
+</Project>
